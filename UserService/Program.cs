@@ -1,44 +1,83 @@
+using Consul;
+using MongoDB.Driver;
+using StackExchange.Redis;
+using UserService.application;
+using UserService.infrastructure;
+using UserService.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<UserService.application.IUserService, UserService.application.UserService>();
+builder.Services.AddSingleton<UserService.application.ISessionService, RedisSessionService>();
+
+builder.Services.AddSingleton<IUserRepository, UserRepository>();
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetConnectionString("Redis");
+    var redisConnectionString = configuration + ",abortConnect=false";
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var mongoDbConnectionString = builder.Configuration.GetConnectionString("MongoDB");
+    return new MongoClient(mongoDbConnectionString);
+});
+
+builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
+{
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://consul:8500";
+    return new ConsulClient(config => config.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddSingleton<IHostedService, ConsulRegistrationService>();
+
+builder.Services.AddControllers();
+
+builder.Services.AddHealthChecks()
+    .AddCheck<CustomHealthCheck>("Custom health check", tags: new[] { "critical" }); ;
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseCors(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.AllowAnyOrigin();
+    options.AllowAnyMethod();
+    options.AllowAnyHeader();
+});
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
+app.MapControllers();
+app.MapHealthChecks("/health");
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+public class ConsulRegistrationService : IHostedService
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    private readonly IConsulClient _consulClient;
+    private readonly string _serviceId;
+
+    public ConsulRegistrationService(IConsulClient consulClient)
+    {
+        _consulClient = consulClient;
+        _serviceId = Guid.NewGuid().ToString();
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        var registration = new AgentServiceRegistration()
+        {
+            ID = _serviceId,
+            Name = "user-service",
+            Address = "user-service",
+            Port = 8080,
+            Tags = new[] { "user", "api" }
+        };
+
+        await _consulClient.Agent.ServiceRegister(registration);
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await _consulClient.Agent.ServiceDeregister(_serviceId);
+    }
 }
