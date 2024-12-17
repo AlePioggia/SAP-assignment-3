@@ -1,4 +1,5 @@
 ﻿using RentalService.domain.entities;
+using static RentalService.domain.events.RideEvents;
 
 namespace RentalService.application.ride.simulation
 {
@@ -8,36 +9,31 @@ namespace RentalService.application.ride.simulation
         private int _creditIntervalMs = 1000;
         private CancellationTokenSource _cts;
         private readonly IPositionNotifier _positionNotifier;
+        private readonly IEventPublisher _eventPublisher;
 
-        public RideSimulation(Ride ride, IPositionNotifier positionNotifier)
+        public RideSimulation(Ride ride, IPositionNotifier positionNotifier, IEventPublisher eventPublisher)
         {
             _ride = ride;
             _cts = new CancellationTokenSource();
             _positionNotifier = positionNotifier;
+            _eventPublisher = eventPublisher;
         }
 
         public async Task StartSimulationAsync(int credit)
         {
-            //var eBike = await _eBikeService.GetEBike(_ride.EBikeId);
-            //if (eBike == null)
-            //{
-            //    throw new InvalidOperationException("Bike not found");
-            //}
-            //var X = eBike.X;
-            //var Y = eBike.Y;
+            _ride.StartTime = DateTime.UtcNow;
 
-            //_ride.StartTime = DateTime.Now;
-            //for (int i = 0; i < credit; i++)
-            //{
-            //    X = X + 1;
-            //    Y = Y + 1;
-            //    await _eBikeService.UpdatePosition(_ride.EBikeId, X, Y);
-            //    _ride.DeductCredit(1);
+            for (int i = 0; i < 10; i++)
+            {
+                if (_cts.Token.IsCancellationRequested) break;
 
-            //    await _positionNotifier.NotifyPositionAsync(_ride.EBikeId, X, Y);
+                var positionEvent = new BikePositionUpdatedEvent(_ride.EBikeId, 1, 1, DateTime.UtcNow);
+                await _positionNotifier.NotifyPositionAsync(_ride.EBikeId, 1, 1);
+                await _eventPublisher.PublishAsync(positionEvent);
 
-            //    await Task.Delay(1000);
-            //}
+                _ride.DeductCredit(1);
+                await Task.Delay(_creditIntervalMs, _cts.Token);
+            }
 
             await _positionNotifier.NotifySimulationStoppedAsync(_ride.EBikeId);
         }
