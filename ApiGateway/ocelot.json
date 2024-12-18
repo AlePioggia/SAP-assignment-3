@@ -1,0 +1,49 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/ebike/{everything}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/api/ebike/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "bike-service",
+      "RouteIsCaseSensitive": false,
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/user/{everything}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/api/user/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "user-service",
+      "RouteIsCaseSensitive": false,
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/ride/{everything}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/api/ride/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UseServiceDiscovery": true,
+      "ServiceName": "rental-service",
+      "RouteIsCaseSensitive": false,
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:9000",
+    "UseServiceDiscovery": true,
+    "ServiceDiscoveryProvider": {
+      "Host": "consul",
+      "Port": 8500,
+      "Type": "PollConsul"
+    }
+  }
+}

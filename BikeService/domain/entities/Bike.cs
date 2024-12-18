@@ -2,7 +2,7 @@
 {
     public class Bike
     {
-        public Guid Id { get; private set; }
+        public string Id { get; private set; }
         public string Model { get; private set; }
         public string Status { get; private set; }
         public int X { get; private set; }
@@ -11,7 +11,7 @@
         private List<object> _changes = new();
         public IEnumerable<object> Changes => _changes;
 
-        public Bike(Guid id, string model, int X, int Y)
+        public Bike(string id, string model, int X, int Y)
         {
             Apply(new BikeCreatedEvent(id, model, "Available", X, Y));
         }

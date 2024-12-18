@@ -1,44 +1,68 @@
+using BikeService.application;
+using BikeService.controller;
+using BikeService.infrastructure;
+using Consul;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
+
+builder.Services.AddSingleton<IBikeService, BikeService.application.BikeService>();
+builder.Services.AddSingleton<IBikeRepository, BikeRepository>();
+
+builder.Services.AddScoped<IPositionNotifier, SignalRPositionNotifier>();
+
+builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
+{
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://consul:8500";
+    return new ConsulClient(ConfigurationBinder => ConfigurationBinder.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseCors(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.WithOrigins("http://localhost:4200")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+});
 
-app.UseHttpsRedirection();
+app.MapHub<BikeHub>("/bikeHub");
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
+app.MapControllers();
+//app.MapHealthChecks("/health");
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+public class ConsulRegistrationService : IHostedService
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    private readonly IConsulClient _consulClient;
+    private readonly string _serviceId;
+
+    public ConsulRegistrationService(IConsulClient consulClient)
+    {
+        _consulClient = consulClient;
+        _serviceId = Guid.NewGuid().ToString();
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        var registration = new AgentServiceRegistration()
+        {
+            ID = _serviceId,
+            Name = "bike-service",
+            Address = "bike-service",
+            Port = 8080,
+            Tags = new[] { "bike", "api" }
+        };
+
+        await _consulClient.Agent.ServiceRegister(registration);
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await _consulClient.Agent.ServiceDeregister(_serviceId);
+    }
 }

@@ -2,7 +2,7 @@
 {
     public interface IBikeService
     {
-        Task CreateBike(Guid bikeId, string model, int X, int Y);
-        Task UpdateBikePosition(Guid bikeId, int X, int Y);
+        Task CreateBike(string bikeId, string model, int X, int Y);
+        Task UpdateBikePosition(string bikeId, int X, int Y);
     }
 }

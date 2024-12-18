@@ -12,16 +12,18 @@ namespace BikeService.infrastructure
         private readonly IConnection _connection;
         private IModel _channel;
         private readonly IBikeService _bikeService;
+        private readonly IPositionNotifier _positionNotifier;
 
-        public RabbitMqConsumer(IBikeService bikeService)
+        public RabbitMqConsumer(IBikeService bikeService, IPositionNotifier positionNotifier)
         {
             _bikeService = bikeService;
+            _positionNotifier = positionNotifier;
 
             var factory = new ConnectionFactory { HostName = "localhost" };
             var connection = factory.CreateConnection();
-            var channel = _connection.CreateModel();
+            var channel = _connection?.CreateModel();
 
-            _channel.QueueDeclare("bike-position-queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+            _channel?.QueueDeclare("bike-position-queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
         }
 
         public void StartConsuming()
@@ -39,6 +41,12 @@ namespace BikeService.infrastructure
                     if (bikePositionEvent != null)
                     {
                         await _bikeService.UpdateBikePosition(
+                            bikePositionEvent.BikeId,
+                            bikePositionEvent.X,
+                            bikePositionEvent.Y
+                        );
+
+                        await _positionNotifier.NotifyPositionAsync(
                             bikePositionEvent.BikeId,
                             bikePositionEvent.X,
                             bikePositionEvent.Y
