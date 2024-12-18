@@ -31,7 +31,7 @@ namespace RentalService.application.ride.simulation
                 await _positionNotifier.NotifyPositionAsync(_ride.EBikeId, 1, 1);
                 await _eventPublisher.PublishAsync(positionEvent);
 
-                _ride.DeductCredit(1);
+                //_ride.DeductCredit(1);
                 await Task.Delay(_creditIntervalMs, _cts.Token);
             }
 
