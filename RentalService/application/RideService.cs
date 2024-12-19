@@ -7,13 +7,13 @@ namespace RentalService.application.ride
     public class RideService : IRideService
     {
         private readonly IRideRepository _rideRepository;
-        private readonly IPositionNotifier _positionNotifier;
+        private readonly IEventPublisher _eventPublisher;
         private readonly ConcurrentDictionary<string, RideSimulation> _activeSimulations = new();
 
-        public RideService(IRideRepository rideRepository, IPositionNotifier positionNotifier)
+        public RideService(IRideRepository rideRepository, IEventPublisher eventPublisher)
         {
             _rideRepository = rideRepository;
-            _positionNotifier = positionNotifier;
+            _eventPublisher = eventPublisher;
         }
 
         public async Task<string> StartRide(string userId, string eBikeId, int credit)
@@ -21,7 +21,7 @@ namespace RentalService.application.ride
             var ride = new Ride(userId, eBikeId);
             await _rideRepository.AddRideAsync(ride);
 
-            var simulation = new RideSimulation(ride, _positionNotifier);
+            var simulation = new RideSimulation(ride, _eventPublisher);
             _activeSimulations[ride.Id] = simulation;
             _ = simulation.StartSimulationAsync(credit);
 

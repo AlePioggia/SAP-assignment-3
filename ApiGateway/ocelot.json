@@ -41,7 +41,7 @@
     "BaseUrl": "http://localhost:9000",
     "UseServiceDiscovery": true,
     "ServiceDiscoveryProvider": {
-      "Host": "consul",
+      "Host": "consul-agent",
       "Port": 8500,
       "Type": "PollConsul"
     }

@@ -2,6 +2,7 @@ using BikeService.application;
 using BikeService.controller;
 using BikeService.infrastructure;
 using Consul;
+using EventStore.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,14 @@ builder.Services.AddScoped<IPositionNotifier, SignalRPositionNotifier>();
 
 builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
 {
-    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://consul:8500";
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://consul-agent:8500";
     return new ConsulClient(ConfigurationBinder => ConfigurationBinder.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddSingleton(sp =>
+{
+    var settings = EventStoreClientSettings.Create("esdb://localhost:2113?tls=false");
+    return new EventStoreClient(settings);
 });
 
 builder.Services.AddControllers();
@@ -32,7 +39,7 @@ app.UseCors(options =>
 
 app.MapHub<BikeHub>("/bikeHub");
 
-app.MapControllers();
+app.MapControllers();   
 //app.MapHealthChecks("/health");
 app.Run();
 

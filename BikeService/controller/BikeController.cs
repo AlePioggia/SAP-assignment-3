@@ -15,14 +15,14 @@ namespace BikeService.controller
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateBike(Guid bikeId, string model, int X, int Y)
+        public async Task<IActionResult> CreateBike(string bikeId, string model, int X, int Y)
         {
             await _bikeService.CreateBike(bikeId, model, X, Y);
             return Ok("Bike created!");
         }
 
         [HttpPost("update-position")]
-        public async Task<IActionResult> UpdatePosition(Guid bikeId, int X, int Y)
+        public async Task<IActionResult> UpdatePosition(string bikeId, int X, int Y)
         {
             await _bikeService.UpdateBikePosition(bikeId, X, Y);
             return Ok("Bike position updated");

@@ -1,44 +1,73 @@
+using Consul;
+using MongoDB.Driver;
+using RentalService.application;
+using RentalService.application.ride;
+using RentalService.infrastructure;
+using RentalService.infrastructure.ride;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<IRideService, RideService>();
+builder.Services.AddSingleton<IRideRepository, RideRepository>();
+
+builder.Services.AddSingleton<IEventPublisher, RabbitMQEventPublisher>();
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var mongoDbConnectionString = builder.Configuration.GetConnectionString("MongoDB");
+    return new MongoClient(mongoDbConnectionString);
+});
+
+builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
+{
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://consul-agent:8500";
+    return new ConsulClient(config => config.Address = new Uri(consulAddress));
+});
+
+builder.Services.AddSingleton<IHostedService, ConsulRegistrationService>();
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseCors(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.WithOrigins("http://localhost:4200")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+});
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
+app.MapControllers();
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+public class ConsulRegistrationService : IHostedService
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    private readonly IConsulClient _consulClient;
+    private readonly string _serviceId;
+
+    public ConsulRegistrationService(IConsulClient consulClient)
+    {
+        _consulClient = consulClient;
+        _serviceId = Guid.NewGuid().ToString();
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        var registration = new AgentServiceRegistration()
+        {
+            ID = _serviceId,
+            Name = "rental-service",
+            Address = "rental-service",
+            Port = 8080,
+            Tags = new[] { "bike", "api" }
+        };
+
+        await _consulClient.Agent.ServiceRegister(registration);
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await _consulClient.Agent.ServiceDeregister(_serviceId);
+    }
 }

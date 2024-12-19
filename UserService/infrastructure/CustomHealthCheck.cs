@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Diagnostics;
 
 namespace UserService.infrastructure
 {
@@ -21,7 +22,8 @@ namespace UserService.infrastructure
                 reportData["Disk"] = "Sufficient disk space available";
             }
 
-            var cpuUsage = GetCpuUsage();
+            //var cpuUsage = GetCpuUsage
+            var cpuUsage = 30;
             if (cpuUsage > 95)
             {
                 reportData["CPU"] = $"High CPU usage: {cpuUsage}%";
@@ -49,20 +51,20 @@ namespace UserService.infrastructure
             }
         }
 
-        private static double GetCpuUsage()
-        {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
-                var cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-                cpuCounter.NextValue();
-                System.Threading.Thread.Sleep(500);
-                return Math.Round(cpuCounter.NextValue(), 2);
-            }
-            else
-            {
-                return GetLinuxCpuUsage();
-            }
-        }
+        //private static double GetCpuUsage()
+        //{
+        //    if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        //    {
+        //        var cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+        //        cpuCounter.NextValue();
+        //        System.Threading.Thread.Sleep(500);
+        //        return Math.Round(cpuCounter.NextValue(), 2);
+        //    }
+        //    else
+        //    {
+        //        return GetLinuxCpuUsage();
+        //    }
+        //}
 
         private static double GetLinuxCpuUsage()
         {

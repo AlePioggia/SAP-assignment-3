@@ -27,7 +27,7 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 
 builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
 {
-    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://consul:8500";
+    var consulAddress = builder.Configuration["Consul:Address"] ?? "http://consul-agent:8500";
     return new ConsulClient(config => config.Address = new Uri(consulAddress));
 });
 

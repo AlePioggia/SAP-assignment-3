@@ -1,0 +1,203 @@
+version: '3.7'
+
+services:
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: "UserService/UserService.csproj"
+        DLL: "UserService.dll"
+    ports:
+      - "5000:8080"
+    environment:
+      - REDIS_CONNECTION=redis:6379
+      - MONGODB_CONNECTION=mongodb://root:rootpassword@mongodb:27017
+      - CONSUL_HTTP_ADDR=http://consul-agent:8500
+    depends_on:
+      - redis
+      - mongodb
+      - consul-agent
+    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "dotnet", "UserService.dll"]
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+
+  bike-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: "BikeService/BikeService.csproj"
+        DLL: "BikeService.dll"
+    environment:
+      - MONGODB_CONNECTION=mongodb://root:rootpassword@mongodb:27017
+      - CONSUL_HTTP_ADDR=http://consul-agent:8500
+      - EVENTSTORE_CONNECTION=esdb://admin:changeit@eventstore:2113?tls=false
+    depends_on:
+      - mongodb
+      - consul-agent
+      - eventstore
+    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "dotnet", "BikeService.dll"]
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+  
+  rental-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: "RentalService/RentalService.csproj"
+        DLL: "RentalService.dll"
+    environment:
+      - MONGODB_CONNECTION=mongodb://root:rootpassword@mongodb:27017
+      - CONSUL_HTTP_ADDR=http://consul-agent:8500
+    depends_on:
+      - mongodb
+      - consul-agent
+    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "dotnet", "RentalService.dll"]
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: "ApiGateway/ApiGateway.csproj"
+        DLL: "ApiGateway.dll"
+    ports:
+      - "9000:8080"
+    environment:
+      - CONSUL_HTTP_ADDR=http://consul-agent:8500
+      - SERVICE_DISCOVERY_HOST=consul-agent
+      - SERVICE_DISCOVERY_PORT=8500
+    depends_on:
+      - redis
+      - mongodb
+      - consul-agent
+    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "dotnet", "ApiGateway.dll"]
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "256M"
+        reservations:
+          cpus: "0.1"
+          memory: "128M"
+
+  mongodb:
+    image: "mongo:latest"
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root 
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+
+  consul-agent:
+    image: "hashicorp/consul:latest"
+    container_name: consul-agent
+    ports:
+      - "8500:8500"
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 30s
+      retries: 5
+      start_period: 10s
+      timeout: 10s
+    networks:
+      - mynetwork
+    command: "consul agent -dev -client=0.0.0.0"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+
+  eventstore:
+    image: eventstore/eventstore:21.10.1-buster-slim
+    container_name: eventstore
+    ports:
+      - "2113:2113" # HTTP API
+      - "1113:1113" # TCP (deprecated, but still in use by some clients)
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2113/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+
+networks:
+  mynetwork:
+    driver: bridge

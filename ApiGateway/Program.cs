@@ -23,6 +23,4 @@ app.UseCors();
 
 await app.UseOcelot();
 
-app.MapHealthChecks("/health");
-
 app.Run();
