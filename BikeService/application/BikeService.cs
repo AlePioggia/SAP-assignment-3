@@ -7,6 +7,11 @@ namespace BikeService.application
     {
         private readonly IBikeRepository _repository;
 
+        public BikeService(IBikeRepository repository)
+        {
+            _repository = repository;
+        }
+
         public async Task CreateBike(string bikeId, string model, int X, int Y)
         {
             var bike = new Bike(bikeId, model, X, Y);

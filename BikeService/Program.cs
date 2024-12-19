@@ -25,6 +25,8 @@ builder.Services.AddSingleton(sp =>
     return new EventStoreClient(settings);
 });
 
+builder.Services.AddSingleton<IHostedService, ConsulRegistrationService>();
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -39,7 +41,7 @@ app.UseCors(options =>
 
 app.MapHub<BikeHub>("/bikeHub");
 
-app.MapControllers();   
+app.MapControllers();
 //app.MapHealthChecks("/health");
 app.Run();
 

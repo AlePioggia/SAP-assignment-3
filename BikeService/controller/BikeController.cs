@@ -15,9 +15,9 @@ namespace BikeService.controller
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateBike(string bikeId, string model, int X, int Y)
+        public async Task<IActionResult> CreateBike([FromBody] CreateBikeRequest request)
         {
-            await _bikeService.CreateBike(bikeId, model, X, Y);
+            await _bikeService.CreateBike(request.BikeId, request.Model, request.X, request.Y);
             return Ok("Bike created!");
         }
 
@@ -27,5 +27,13 @@ namespace BikeService.controller
             await _bikeService.UpdateBikePosition(bikeId, X, Y);
             return Ok("Bike position updated");
         }
+    }
+
+    public class CreateBikeRequest
+    {
+        public string BikeId { get; set; }
+        public string Model { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
     }
 }

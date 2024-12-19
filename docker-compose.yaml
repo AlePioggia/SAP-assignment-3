@@ -70,6 +70,7 @@ services:
     depends_on:
       - mongodb
       - consul-agent
+      - rabbitmq
     command: ["./wait-for-it.sh", "consul-agent:8500", "--", "dotnet", "RentalService.dll"]
     networks:
       - mynetwork
@@ -197,6 +198,26 @@ services:
         reservations:
           cpus: "0.25"
           memory: "256M"
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "256M"
+        reservations:
+          cpus: "0.1"
+          memory: "128M"
 
 networks:
   mynetwork:

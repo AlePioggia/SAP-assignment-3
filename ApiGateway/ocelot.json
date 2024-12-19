@@ -1,9 +1,9 @@
 {
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/ebike/{everything}",
+      "DownstreamPathTemplate": "/api/bike/{everything}",
       "DownstreamScheme": "http",
-      "UpstreamPathTemplate": "/api/ebike/{everything}",
+      "UpstreamPathTemplate": "/api/bike/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
       "UseServiceDiscovery": true,
       "ServiceName": "bike-service",

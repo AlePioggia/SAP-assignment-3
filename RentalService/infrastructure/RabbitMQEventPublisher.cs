@@ -13,9 +13,14 @@ namespace RentalService.infrastructure
         private readonly IConnection _connection;
         private readonly IModel _channel;
 
-        public RabbitMQEventPublisher()
+        public RabbitMQEventPublisher(IConfiguration configuration)
         {
-            var factory = new ConnectionFactory { HostName = "localhost" };
+                var factory = new ConnectionFactory
+            {
+                HostName = configuration["RabbitMQ:Host"] ?? "rabbitmq",
+                UserName = configuration["RabbitMQ:Username"] ?? "guest",
+                Password = configuration["RabbitMQ:Password"] ?? "guest"
+            };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
