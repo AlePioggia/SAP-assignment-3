@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IStationService, StationService.application.StationService>();
 builder.Services.AddSingleton<IStationRepository, StationRepository>();
-
+builder.Services.AddHostedService<RabbitMqConsumer>();
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var mongoDbConnectionString = builder.Configuration.GetConnectionString("MongoDB");

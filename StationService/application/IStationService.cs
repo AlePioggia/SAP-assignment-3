@@ -9,5 +9,6 @@ namespace StationService.application
         Task<Station> GetNearestStation(int x, int y);
         Task<string> CreateStationAsync((int, int) position, int capacity);
         Task<string> DeleteStationAsync(string id);
+        Task<string> chargeBike(string stationId, string bikeId);
     }
 }
