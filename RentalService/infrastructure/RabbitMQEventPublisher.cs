@@ -23,6 +23,16 @@ namespace RentalService.infrastructure
             _channel = _connection.CreateModel();
 
             _channel.ExchangeDeclare(exchange: "bike.events", type: "topic");
+
+            _channel.QueueDeclare(queue: "bike-position-queue",
+                                durable: true,
+                                exclusive: false,
+                                autoDelete: false,
+                                arguments: null);
+
+            _channel.QueueBind(queue: "bike-position-queue",
+                            exchange: "bike.events",
+                            routingKey: "bike.position.updated");
         }
 
         public async Task PublishAsync(RideEvents.BikePositionUpdatedEvent positionEvent)

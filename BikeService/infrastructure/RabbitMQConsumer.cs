@@ -26,20 +26,6 @@ namespace BikeService.infrastructure
             factory.Password = "mypassword";
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
-
-            _channel.QueueDeclare(
-                queue: "bike-position-queue",
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null
-            );
-
-            _channel.QueueBind(
-                queue: "bike-position-queue",
-                exchange: "bike.events",
-                routingKey: "bike.position.updated"
-            );
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -56,16 +42,20 @@ namespace BikeService.infrastructure
                     var bikePositionEvent = JsonSerializer.Deserialize<BikePositionUpdatedEvent>(message);
                     if (bikePositionEvent != null)
                     {
+                        var (currentX, currentY) = await _bikeService.GetBikeCurrentPosition(bikePositionEvent.BikeId);
+
+                        var (updatedX, updatedY) = (currentX + bikePositionEvent.X, currentY + bikePositionEvent.Y);
+
                         await _bikeService.UpdateBikePosition(
                             bikePositionEvent.BikeId,
-                            bikePositionEvent.X,
-                            bikePositionEvent.Y
+                            updatedX,
+                            updatedY
                         );
 
                         await _positionNotifier.NotifyPositionAsync(
                             bikePositionEvent.BikeId,
-                            bikePositionEvent.X,
-                            bikePositionEvent.Y
+                            updatedX,
+                            updatedY
                         );
 
                         Console.WriteLine("Event consumed and processed successfully.");
