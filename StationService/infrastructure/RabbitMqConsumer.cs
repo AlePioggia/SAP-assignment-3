@@ -25,16 +25,6 @@ namespace StationService.infrastructure
             factory.Password = "mypassword";
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
-
-            _channel.ExchangeDeclare("stationExchange", ExchangeType.Direct);
-
-            _channel.QueueDeclare("stationRequestedQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _channel.QueueDeclare("allStationsRequestedQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-            _channel.QueueDeclare("chargeEbikeQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-
-            _channel.QueueBind("stationRequestedQueue", "stationExchange", "stationRequested");
-            _channel.QueueBind("allStationsRequestedQueue", "stationExchange", "allStationsRequested");
-            _channel.QueueBind("chargeEbikeQueue", "stationExchange", "chargeEbike");
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

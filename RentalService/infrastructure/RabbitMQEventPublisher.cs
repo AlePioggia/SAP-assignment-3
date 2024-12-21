@@ -33,6 +33,16 @@ namespace RentalService.infrastructure
             _channel.QueueBind(queue: "bike-position-queue",
                             exchange: "bike.events",
                             routingKey: "bike.position.updated");
+
+            _channel.ExchangeDeclare("stationExchange", ExchangeType.Direct);
+
+            _channel.QueueDeclare("stationRequestedQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare("allStationsRequestedQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare("chargeEbikeQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+            _channel.QueueBind("stationRequestedQueue", "stationExchange", "stationRequested");
+            _channel.QueueBind("allStationsRequestedQueue", "stationExchange", "allStationsRequested");
+            _channel.QueueBind("chargeEbikeQueue", "stationExchange", "chargeEbike");
         }
 
         public async Task PublishAsync(RideEvents.BikePositionUpdatedEvent positionEvent)
@@ -67,5 +77,43 @@ namespace RentalService.infrastructure
             _connection?.Close();
         }
 
+        public async Task PublishAsync(RideEvents.ChargeEBikeEvent chargeEBikeEvent)
+        {
+            var message = JsonSerializer.Serialize(chargeEBikeEvent);
+            var body = Encoding.UTF8.GetBytes(message);
+
+            _channel.BasicPublish(exchange: "stationExchange",
+                                  routingKey: "chargeEbike",
+                                  basicProperties: null,
+                                  body: body);
+
+            await Task.CompletedTask;
+        }
+
+        public async Task PublishAsync(RideEvents.RequestStationInfoEvent requestStationInfoEvent)
+        {
+            var message = JsonSerializer.Serialize(requestStationInfoEvent);
+            var body = Encoding.UTF8.GetBytes(message);
+
+            _channel.BasicPublish(exchange: "stationExchange",
+                                  routingKey: "stationRequested",
+                                  basicProperties: null,
+                                  body: body);
+
+            await Task.CompletedTask;
+        }
+
+        public async Task PublishAsync(RideEvents.RequestAllStationsEvent requestAllStationsEvent)
+        {
+            var message = JsonSerializer.Serialize(requestAllStationsEvent);
+            var body = Encoding.UTF8.GetBytes(message);
+
+            _channel.BasicPublish(exchange: "stationExchange",
+                                  routingKey: "allStationsRequested",
+                                  basicProperties: null,
+                                  body: body);
+
+            await Task.CompletedTask;
+        }
     }
 }

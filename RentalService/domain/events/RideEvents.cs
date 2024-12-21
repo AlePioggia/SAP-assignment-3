@@ -32,5 +32,34 @@ namespace RentalService.domain.events
                 EndTime = endTime;
             }
         }
+
+        public class ChargeEBikeEvent
+        {
+            public string BikeId { get; }
+            public string StationId { get; }
+
+            public ChargeEBikeEvent(string bikeId, string stationId)
+            {
+                BikeId = bikeId;
+                StationId = stationId;
+            }
+        }   
+
+        public class RequestStationInfoEvent
+        {
+            public string StationId { get; }
+
+            public RequestStationInfoEvent(string stationId)
+            {
+                StationId = stationId;
+            }
+        }
+
+        public class  RequestAllStationsEvent
+        {
+            public RequestAllStationsEvent()
+            {
+            }
+        }
     }
 }
