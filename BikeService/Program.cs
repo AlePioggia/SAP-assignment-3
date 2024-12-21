@@ -3,6 +3,7 @@ using BikeService.controller;
 using BikeService.infrastructure;
 using Consul;
 using EventStore.Client;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,8 @@ builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<IBikeService, BikeService.application.BikeService>();
 builder.Services.AddSingleton<IBikeRepository, BikeRepository>();
-
-builder.Services.AddScoped<IPositionNotifier, SignalRPositionNotifier>();
+builder.Services.AddHostedService<RabbitMqConsumer>();
+builder.Services.AddSingleton<IPositionNotifier, SignalRPositionNotifier>();
 
 builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
 {
@@ -21,11 +22,11 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
 
 builder.Services.AddSingleton(sp =>
 {
-    var settings = EventStoreClientSettings.Create("esdb://localhost:2113?tls=false");
+    var settings = EventStoreClientSettings.Create("esdb://eventstore:2113?tls=false");
     return new EventStoreClient(settings);
 });
 
-builder.Services.AddSingleton<IHostedService, ConsulRegistrationService>();
+builder.Services.AddScoped<IHostedService, ConsulRegistrationService>();
 
 builder.Services.AddControllers();
 

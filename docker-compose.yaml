@@ -45,7 +45,8 @@ services:
       - mongodb
       - consul-agent
       - eventstore
-    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "dotnet", "BikeService.dll"]
+      - rabbitmq
+    command: ["./wait-for-it.sh", "-t", "60", "rabbitmq:5672", "--", "dotnet", "BikeService.dll"]
     networks:
       - mynetwork
     deploy:
@@ -67,11 +68,12 @@ services:
     environment:
       - MONGODB_CONNECTION=mongodb://root:rootpassword@mongodb:27017
       - CONSUL_HTTP_ADDR=http://consul-agent:8500
+      - RABBITMQ_CONNECTION=amqp://guest:guest@rabbitmq:5672
     depends_on:
       - mongodb
       - consul-agent
       - rabbitmq
-    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "dotnet", "RentalService.dll"]
+    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "./wait-for-it.sh", "rabbitmq:5672", "--", "dotnet", "RentalService.dll"]
     networks:
       - mynetwork
     deploy:
@@ -172,8 +174,8 @@ services:
     image: eventstore/eventstore:21.10.1-buster-slim
     container_name: eventstore
     ports:
-      - "2113:2113" # HTTP API
-      - "1113:1113" # TCP (deprecated, but still in use by some clients)
+      - "2113:2113"
+      - "1113:1113"
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -200,24 +202,21 @@ services:
           memory: "256M"
 
   rabbitmq:
-    image: "rabbitmq:3-management"
+    image: "rabbitmq:3.13-management"
     container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=myuser
+      - RABBITMQ_DEFAULT_PASS=mypassword
     networks:
       - mynetwork
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: "256M"
-        reservations:
-          cpus: "0.1"
-          memory: "128M"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   mynetwork:

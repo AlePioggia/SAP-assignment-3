@@ -15,12 +15,10 @@ namespace RentalService.infrastructure
 
         public RabbitMQEventPublisher(IConfiguration configuration)
         {
-                var factory = new ConnectionFactory
-            {
-                HostName = configuration["RabbitMQ:Host"] ?? "rabbitmq",
-                UserName = configuration["RabbitMQ:Username"] ?? "guest",
-                Password = configuration["RabbitMQ:Password"] ?? "guest"
-            };
+            ConnectionFactory factory = new ConnectionFactory() { HostName = "rabbitmq", Port = 5672 };
+            factory.UserName = "myuser";
+            factory.Password = "mypassword";
+
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
