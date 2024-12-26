@@ -5,4 +5,5 @@
     public record BikeUpdatedEvent(string BikeId, int X, int Y);
     public record ChargeBikeRequest(string BikeId, string Station);
     public record ChargeBikeResponse(string BikeId, string Station);
+    public record ReachUser(string bikeId, int x, int y);
 }

@@ -16,12 +16,12 @@ namespace RentalService.application.ride
             _eventPublisher = eventPublisher;
         }
 
-        public async Task<string> StartRide(string userId, string eBikeId, int credit)
+        public async Task<string> StartRide(string userId, string eBikeId, (int, int) userPosition, int credit)
         {
             var ride = new Ride(userId, eBikeId);
             await _rideRepository.AddRideAsync(ride);
 
-            var simulation = new RideSimulation(ride, _eventPublisher);
+            var simulation = new RideSimulation(ride, userPosition,_eventPublisher);
             _activeSimulations[ride.Id] = simulation;
             _ = simulation.StartSimulationAsync(credit);
 

@@ -19,6 +19,20 @@ namespace RentalService.domain.events
             }
         }
 
+        public class ReachUserEvent
+        {
+            public string BikeId { get; }
+            public int X { get; }
+            public int Y { get; }
+
+            public ReachUserEvent(string bikeId, int x, int y)
+            {
+                BikeId = bikeId;
+                X = x;
+                Y = y;
+            }
+        }
+
         public class RideEndedEvent
         {
             public string RideId { get; }

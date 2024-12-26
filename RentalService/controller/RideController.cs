@@ -23,7 +23,7 @@ namespace BikeManagementService.controller
                 return BadRequest("Invalid user ID or eBike ID.");
             }
 
-            var rideId = await _rideService.StartRide(request.UserId, request.EBikeId, 10);
+            var rideId = await _rideService.StartRide(request.UserId, request.EBikeId, request.UserPosition, 10);
 
             if (rideId == null)
             {
@@ -64,7 +64,8 @@ namespace BikeManagementService.controller
 
     public class RideStartRequest
     {
-        public string UserId { get; set; }
-        public string EBikeId { get; set; }
+        public string? UserId { get; set; }
+        public string? EBikeId { get; set; }
+        public (int, int) UserPosition { get; set; }
     }
 }

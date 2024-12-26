@@ -30,6 +30,7 @@ namespace SmartCityService.infrastructure
             _channel.QueueDeclare("digital_twin_init_bikes_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare("digital_twin_init_stations_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare("digital_twin_charge_request_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare("digital_twin_reach_user_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -45,6 +46,10 @@ namespace SmartCityService.infrastructure
             var chargeBikeConsumer = new EventingBasicConsumer(_channel);
             chargeBikeConsumer.Received += async (model, ea) => await HandleChargeBikeRequestAsync(ea);
             _channel.BasicConsume(queue: "digital_twin_charge_request_queue", autoAck: true, consumer: chargeBikeConsumer);
+
+            var reachUserConsumer = new EventingBasicConsumer(_channel);
+            reachUserConsumer.Received += async (model, ea) => await HandleReachUserRequestAsync(ea);
+            _channel.BasicConsume(queue: "digital_twin_reach_user_queue", autoAck: true, consumer: reachUserConsumer);
 
             Console.WriteLine("RabbitMQ Consumers Started.");
             return Task.CompletedTask;
@@ -92,6 +97,47 @@ namespace SmartCityService.infrastructure
             }
 
             await Task.CompletedTask;
+        }
+
+        private async Task HandleReachUserRequestAsync(BasicDeliverEventArgs ea)
+        {
+            var body = ea.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
+
+            try 
+            {
+                var request = JsonSerializer.Deserialize<ReachUser>(message);
+                if (request != null)
+                {
+                    var bike = _smartCityService.GetBikeById(request.bikeId);
+                    if (bike == null)
+                    {
+                        Console.WriteLine($"[Error] Bike with ID {request.bikeId} not found.");
+                        return;
+                    }
+
+                    bike.X = request.x;
+                    bike.Y = request.y;
+                    _smartCityService.AddOrUpdateBike(bike);
+
+                    var bikeUpdatedEvent = new BikeUpdatedEvent(bike.Id, request.x, request.y);
+                    var bikeUpdatedMessage = JsonSerializer.Serialize(bikeUpdatedEvent);    
+                    var bikeUpdatedBytes = Encoding.UTF8.GetBytes(bikeUpdatedMessage);
+
+                    _channel.BasicPublish(
+                        exchange: "",
+                        routingKey: "bike-position-queue",
+                        basicProperties: null,
+                        body: bikeUpdatedBytes
+                    );
+                }
+
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Error] Failed to process reach user request: {ex.Message}");
+            }
         }
 
         private async Task HandleChargeBikeRequestAsync(BasicDeliverEventArgs ea)

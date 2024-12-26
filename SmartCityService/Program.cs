@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IBikeRepository, BikeRepository>();
 builder.Services.AddSingleton<IStationRepository, StationRepository>();
-builder.Services.AddSingleton<ISmartCityService, SmartCityService>();
+builder.Services.AddSingleton<ISmartCityService, SmartCityService.application.SmartCityService>();
 
 builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
 {

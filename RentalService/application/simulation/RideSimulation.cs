@@ -8,17 +8,22 @@ namespace RentalService.application.ride.simulation
         private readonly Ride _ride;
         private int _creditIntervalMs = 1000;
         private CancellationTokenSource _cts;
+        private (int, int) _startingPosition;
         private readonly IEventPublisher _eventPublisher;
 
-        public RideSimulation(Ride ride, IEventPublisher eventPublisher)
+        public RideSimulation(Ride ride, (int, int) startingPosition, IEventPublisher eventPublisher)
         {
             _ride = ride;
             _cts = new CancellationTokenSource();
             _eventPublisher = eventPublisher;
+            _startingPosition = startingPosition;
         }
 
         public async Task StartSimulationAsync(int credit)
         {
+            var reachUser = new ReachUserEvent(_ride.EBikeId, _startingPosition.Item1, _startingPosition.Item2);
+            await _eventPublisher.PublishAsync(reachUser);
+
             _ride.StartTime = DateTime.UtcNow;
 
             for (int i = 0; i < 10; i++)
@@ -27,7 +32,6 @@ namespace RentalService.application.ride.simulation
 
                 var positionEvent = new BikePositionUpdatedEvent(_ride.EBikeId, 1, 1, DateTime.UtcNow);
                 await _eventPublisher.PublishAsync(positionEvent);
-                //_ride.DeductCredit(1);
                 await Task.Delay(_creditIntervalMs, _cts.Token);
             }
 

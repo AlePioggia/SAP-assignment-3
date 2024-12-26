@@ -9,5 +9,6 @@ namespace RentalService.application
         Task PublishAsync(ChargeEBikeEvent chargeEBikeEvent);
         Task PublishAsync(RequestStationInfoEvent requestStationInfoEvent);
         Task PublishAsync(RequestAllStationsEvent requestAllStationsEvent);
+        Task PublishAsync(ReachUserEvent reachUser);
     }
 }

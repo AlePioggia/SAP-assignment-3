@@ -117,79 +117,40 @@ namespace RentalService.infrastructure
         }
 
         public async Task PerformChargingSequenceAsync(string bikeId, int x, int y)
-        {
-            // 1. Get nearest station
-            var nearestStationEvent = new RideEvents.RequestNearestStationEvent(x, y);
-            var nearestStationPosition = await PublishRequestAsync<RideEvents.RequestNearestStationEvent, (int, int)>(
-                nearestStationEvent,
-                routingKey: "stationRequested",
-                replyQueue: "rental_service_reply_queue"
-            );
-
-            // 2. Go to digital station
-            // var goToStationEvent = new RideEvents.GoToStationEvent(bikeId, nearestStationPosition.Item1, nearestStationPosition.Item2);
-            // var stationArrivalResponse = await PublishRequestAsync<RideEvents.GoToStationEvent, StationArrivalResponse>(
-            //     goToStationEvent,
-            //     routingKey: "goToStation",
-            //     replyQueue: "rental_service_reply_queue"
-            // );
-
-            // if (stationArrivalResponse == null || !stationArrivalResponse.Success)
-            // {
-            //     Console.WriteLine("Failed to reach the station.");
-            //     return;
-            // }
-
-            // Console.WriteLine($"Bike {bikeId} arrived at station.");
-
-            // 3. Charge eBike
-            var chargeEbikeEvent = new RideEvents.ChargeEBikeEvent(bikeId, nearestStationPosition.Item1, nearestStationPosition.Item2);
-            var chargeResponse = await PublishRequestAsync<RideEvents.ChargeEBikeEvent, string>(
-                chargeEbikeEvent,
-                routingKey: "chargeEbike",
-                replyQueue: "rental_service_reply_queue"
-            );
+        { 
+            throw new NotImplementedException();
         }
 
 
         private async Task<TResponse?> PublishRequestAsync<TRequest, TResponse>(TRequest request, string routingKey, string replyQueue, int timeoutMs = 5000)
         {
-            // Serializza il messaggio di richiesta
             var message = JsonSerializer.Serialize(request);
             var body = Encoding.UTF8.GetBytes(message);
 
-            // Creazione di un ID univoco per correlare la richiesta e la risposta
             var correlationId = Guid.NewGuid().ToString();
 
-            // Proprietà del messaggio, incluso il campo ReplyTo
             var props = _channel.CreateBasicProperties();
             props.ReplyTo = replyQueue;
             props.CorrelationId = correlationId;
 
-            // Dichiarazione della coda di risposta
             _channel.QueueDeclare(queue: replyQueue, durable: false, exclusive: false, autoDelete: true, arguments: null);
 
-            // Pubblicazione del messaggio
             _channel.BasicPublish(exchange: "stationExchange", routingKey: routingKey, basicProperties: props, body: body);
 
-            // Attesa della risposta
             var tcs = new TaskCompletionSource<TResponse?>();
-
-            // Consumatore per leggere la risposta dalla coda
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
-                if (ea.BasicProperties.CorrelationId == correlationId) // Controlla l'ID di correlazione
+                if (ea.BasicProperties.CorrelationId == correlationId)
                 {
                     var responseJson = Encoding.UTF8.GetString(ea.Body.ToArray());
                     var response = JsonSerializer.Deserialize<TResponse>(responseJson);
-                    tcs.SetResult(response); // Imposta il risultato
+                    tcs.SetResult(response); 
                 }
             };
 
             _channel.BasicConsume(queue: replyQueue, autoAck: true, consumer: consumer);
 
-            // Timeout per evitare che il task resti bloccato
             using (var cts = new CancellationTokenSource(timeoutMs))
             {
                 try
@@ -204,6 +165,18 @@ namespace RentalService.infrastructure
             }
         }
 
+        public async Task PublishAsync(RideEvents.ReachUserEvent reachUserEvent)
+        {
+            var message = JsonSerializer.Serialize(reachUserEvent);
+            var body = Encoding.UTF8.GetBytes(message);
+
+            _channel.BasicPublish(exchange: "reachUserExchange",
+                                  routingKey: "reachUser",
+                                  basicProperties: null,
+                                  body: body);
+
+            await Task.CompletedTask;
+        }
     }
 
 
