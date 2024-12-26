@@ -58,7 +58,14 @@ namespace BikeService.infrastructure
                             updatedY
                         );
 
-                        Console.WriteLine("Event consumed and processed successfully.");
+                        var confirmationEvent = new BikePositionUpdatedConfirmationEvent
+                        {
+                            BikeId = bikePositionEvent.BikeId,
+                            Success = true,
+                            Timestamp = DateTime.UtcNow
+                        };
+
+                        await PublishConfirmationAsync(confirmationEvent);
                     }
                 }
                 catch (Exception ex)
@@ -70,6 +77,21 @@ namespace BikeService.infrastructure
             _channel.BasicConsume(queue: "bike-position-queue", autoAck: true, consumer: consumer);
             Console.WriteLine("RabbitMQ consumer started...");
             return Task.CompletedTask;
+        }
+
+        private async Task PublishConfirmationAsync(BikePositionUpdatedConfirmationEvent confirmationEvent)
+        {
+            var message = JsonSerializer.Serialize(confirmationEvent);
+            var body = Encoding.UTF8.GetBytes(message);
+
+            _channel.BasicPublish(
+                exchange: "bike.events", 
+                routingKey: "bike.position.updated.confirmation",
+                basicProperties: null,
+                body: body
+            );
+
+            await Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

@@ -106,7 +106,7 @@ namespace SmartCityService.infrastructure
 
             try 
             {
-                var request = JsonSerializer.Deserialize<ReachUser>(message);
+                var request = JsonSerializer.Deserialize<ReachUserEvent>(message);
                 if (request != null)
                 {
                     var bike = _smartCityService.GetBikeById(request.bikeId);
@@ -116,19 +116,50 @@ namespace SmartCityService.infrastructure
                         return;
                     }
 
-                    bike.X = request.x;
-                    bike.Y = request.y;
+                    int currentX = bike.X;
+                    int currentY = bike.Y;
+                    int targetX = request.x;
+                    int targetY = request.y;
+
+                    while (currentX != targetX || currentY != targetY) 
+                    {
+                        if (currentX < targetX) currentX++;
+                        else if (currentX > targetX) currentX--;
+
+                        if (currentY < targetY) currentY++;
+                        else if (currentY > targetY) currentY--;
+
+                        bike.X = currentX;
+                        bike.Y = currentY;
+                        _smartCityService.AddOrUpdateBike(bike);
+
+                        var progressEvent = new BikeUpdatedEvent(bike.Id, currentX, currentY);
+                        var progressMessage = JsonSerializer.Serialize(progressEvent);
+                        var progressBytes = Encoding.UTF8.GetBytes(progressMessage);
+
+                        _channel.BasicPublish(
+                            exchange: "",
+                            routingKey: "bike-position-queue",
+                            basicProperties: null,
+                            body: progressBytes
+                        );
+
+                        await Task.Delay(500);
+                    }
+
+                    var bikeReachedEvent = new ReachUserEvent(bike.Id, request.x, request.y);
+
                     _smartCityService.AddOrUpdateBike(bike);
 
                     var bikeUpdatedEvent = new BikeUpdatedEvent(bike.Id, request.x, request.y);
-                    var bikeUpdatedMessage = JsonSerializer.Serialize(bikeUpdatedEvent);    
-                    var bikeUpdatedBytes = Encoding.UTF8.GetBytes(bikeUpdatedMessage);
+                    var bikeReachedMessage = JsonSerializer.Serialize(bikeReachedEvent);
+                    var bikeReachedBytes = Encoding.UTF8.GetBytes(bikeReachedMessage);
 
                     _channel.BasicPublish(
                         exchange: "",
-                        routingKey: "bike-position-queue",
+                        routingKey: "bike-reached-user-queue",
                         basicProperties: null,
-                        body: bikeUpdatedBytes
+                        body: bikeReachedBytes
                     );
                 }
 

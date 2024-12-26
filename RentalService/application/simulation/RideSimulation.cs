@@ -32,6 +32,8 @@ namespace RentalService.application.ride.simulation
 
                 var positionEvent = new BikePositionUpdatedEvent(_ride.EBikeId, 1, 1, DateTime.UtcNow);
                 await _eventPublisher.PublishAsync(positionEvent);
+                await _eventPublisher.WaitForPositionUpdateConfirmation(_ride.EBikeId);
+
                 await Task.Delay(_creditIntervalMs, _cts.Token);
             }
 

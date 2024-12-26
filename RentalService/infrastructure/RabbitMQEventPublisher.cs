@@ -39,10 +39,12 @@ namespace RentalService.infrastructure
             _channel.QueueDeclare("stationRequestedQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare("allStationsRequestedQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
             _channel.QueueDeclare("chargeEbikeQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+            _channel.QueueDeclare("reachUserQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);  
 
             _channel.QueueBind("stationRequestedQueue", "stationExchange", "stationRequested");
             _channel.QueueBind("allStationsRequestedQueue", "stationExchange", "allStationsRequested");
             _channel.QueueBind("chargeEbikeQueue", "stationExchange", "chargeEbike");
+            _channel.QueueBind("reachUserQueue", "reachUserExchange", "reachUser");
         }
 
         public async Task PublishAsync(RideEvents.BikePositionUpdatedEvent positionEvent)
@@ -160,7 +162,7 @@ namespace RentalService.infrastructure
                 }
                 catch (TaskCanceledException)
                 {
-                    return default; // Timeout: restituisce un valore di default
+                    return default;
                 }
             }
         }
@@ -175,8 +177,55 @@ namespace RentalService.infrastructure
                                   basicProperties: null,
                                   body: body);
 
+            await WaitForBikeToReachUser(reachUserEvent.BikeId);
+
             await Task.CompletedTask;
         }
+
+        private async Task WaitForBikeToReachUser(string bikeId)
+        {
+            var tcs = new TaskCompletionSource();
+
+            var consumer = new EventingBasicConsumer(_channel);
+            consumer.Received += (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                var eventMessage = JsonSerializer.Deserialize<RideEvents.BikeReachedUserEvent>(message);
+
+                if (eventMessage != null && eventMessage.BikeId == bikeId)
+                {
+                    tcs.SetResult();
+                }
+            };
+
+            _channel.BasicConsume(queue: "bike-reached-queue", autoAck: true, consumer: consumer);
+
+            await tcs.Task;
+        }
+
+        public async Task WaitForPositionUpdateConfirmation(string bikeId)
+        {
+            var tcs = new TaskCompletionSource();
+
+            var consumer = new EventingBasicConsumer(_channel);
+            consumer.Received += (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                var eventMessage = JsonSerializer.Deserialize<RideEvents.BikePositionUpdatedConfirmationEvent>(message);
+
+                if (eventMessage != null && eventMessage.BikeId == bikeId)
+                {
+                    tcs.SetResult();
+                }
+            };
+
+            _channel.BasicConsume(queue: "bike-position-updated-confirmation-queue", autoAck: true, consumer: consumer);
+
+            await tcs.Task;
+        }
+        
     }
 
 

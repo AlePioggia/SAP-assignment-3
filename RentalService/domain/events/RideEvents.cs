@@ -86,5 +86,33 @@ namespace RentalService.domain.events
                 Y = y;
             }
         }
+
+        public class BikeReachedUserEvent
+        {
+            public string BikeId { get; }
+            public int X { get; }
+            public int Y { get; }
+
+            public BikeReachedUserEvent(string bikeId, int x, int y)
+            {
+                BikeId = bikeId;
+                X = x;
+                Y = y;
+            }
+        }
+
+        public class BikePositionUpdatedConfirmationEvent
+        {
+            public string BikeId { get; }
+            public int X { get; }
+            public int Y { get; }
+
+            public BikePositionUpdatedConfirmationEvent(string bikeId, int x, int y)
+            {
+                BikeId = bikeId;
+                X = x;
+                Y = y;
+            }
+        }
     }
 }

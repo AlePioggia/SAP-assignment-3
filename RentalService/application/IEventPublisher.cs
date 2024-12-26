@@ -10,5 +10,6 @@ namespace RentalService.application
         Task PublishAsync(RequestStationInfoEvent requestStationInfoEvent);
         Task PublishAsync(RequestAllStationsEvent requestAllStationsEvent);
         Task PublishAsync(ReachUserEvent reachUser);
+        Task WaitForPositionUpdateConfirmation(string bikeId);
     }
 }
