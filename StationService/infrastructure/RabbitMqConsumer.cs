@@ -91,6 +91,22 @@ namespace StationService.infrastructure
                             );
                         }
                     }
+                    else if (ea.RoutingKey == "getNearestStation") {
+                        var getNearestStationEvent = JsonSerializer.Deserialize<GetNearestStation>(message);
+                        if (getNearestStationEvent != null) {
+                            var station = await _stationService.GetNearestStation(getNearestStationEvent.X, getNearestStationEvent.Y);
+                            if (station != null) {
+                                var stationJson = JsonSerializer.Serialize(station);
+                                var responseBytes = Encoding.UTF8.GetBytes(stationJson);
+                                _channel.BasicPublish(
+                                    exchange: "",
+                                    routingKey: ea.BasicProperties.ReplyTo,
+                                    basicProperties: null,
+                                    body: responseBytes
+                                );
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {

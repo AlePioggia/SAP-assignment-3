@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationService", "StationService\StationService.csproj", "{66245EA1-49B3-4830-9FBB-6C65EB1AAF3E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartCityService", "SmartCityService\SmartCityService.csproj", "{AF3DD2C9-3597-4AAC-BF75-CC4137C4E8B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{66245EA1-49B3-4830-9FBB-6C65EB1AAF3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66245EA1-49B3-4830-9FBB-6C65EB1AAF3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66245EA1-49B3-4830-9FBB-6C65EB1AAF3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF3DD2C9-3597-4AAC-BF75-CC4137C4E8B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF3DD2C9-3597-4AAC-BF75-CC4137C4E8B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF3DD2C9-3597-4AAC-BF75-CC4137C4E8B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF3DD2C9-3597-4AAC-BF75-CC4137C4E8B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

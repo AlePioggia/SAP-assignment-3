@@ -27,10 +27,12 @@ namespace RentalService.application.ride.simulation
 
                 var positionEvent = new BikePositionUpdatedEvent(_ride.EBikeId, 1, 1, DateTime.UtcNow);
                 await _eventPublisher.PublishAsync(positionEvent);
-
                 //_ride.DeductCredit(1);
                 await Task.Delay(_creditIntervalMs, _cts.Token);
             }
+
+            var chargeEbike = new ChargeEBikeEvent(_ride.EBikeId, 1, 1);
+            await _eventPublisher.PublishAsync(chargeEbike);
         }
 
         public void StopSimulation()

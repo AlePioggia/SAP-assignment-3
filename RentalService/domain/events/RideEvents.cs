@@ -36,12 +36,11 @@ namespace RentalService.domain.events
         public class ChargeEBikeEvent
         {
             public string BikeId { get; }
-            public string StationId { get; }
-
-            public ChargeEBikeEvent(string bikeId, string stationId)
+            public (int, int) Position { get; }
+            public ChargeEBikeEvent(string bikeId, int x, int y)
             {
                 BikeId = bikeId;
-                StationId = stationId;
+                Position = (x, y);
             }
         }   
 
@@ -59,6 +58,18 @@ namespace RentalService.domain.events
         {
             public RequestAllStationsEvent()
             {
+            }
+        }
+
+        public class RequestNearestStationEvent
+        {
+            public int X { get; }
+            public int Y { get; }
+
+            public RequestNearestStationEvent(int x, int y)
+            {
+                X = x;
+                Y = y;
             }
         }
     }
