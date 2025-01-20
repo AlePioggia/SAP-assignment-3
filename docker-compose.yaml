@@ -57,6 +57,8 @@ services:
         reservations:
           cpus: "0.25"
           memory: "256M"
+    ports:
+      - "5001:8080"
   
   rental-service:
     build:
@@ -84,6 +86,8 @@ services:
         reservations:
           cpus: "0.25"
           memory: "256M"
+    ports:
+      - "5002:8080"
 
   station-service:
     build:
@@ -111,6 +115,36 @@ services:
         reservations:
           cpus: "0.25"
           memory: "256M"
+    ports:
+      - "5003:8080"
+
+  smart-city-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_NAME: "SmartCityService/SmartCityService.csproj"
+        DLL: "SmartCityService.dll"
+    environment:
+      - MONGODB_CONNECTION=mongodb://root:rootpassword@mongodb:27017
+      - CONSUL_HTTP_ADDR=http://consul-agent:8500
+      - RABBITMQ_CONNECTION=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - mongodb
+      - consul-agent
+      - rabbitmq
+    command: ["./wait-for-it.sh", "consul-agent:8500", "--", "./wait-for-it.sh", "rabbitmq:5672", "--", "dotnet", "SmartCityService.dll"]
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+    ports: "5004:8080"
 
   api-gateway:
     build:

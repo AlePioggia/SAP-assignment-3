@@ -5,7 +5,7 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/bike/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
-      "UseServiceDiscovery": true,
+      "UseServiceDiscovery": false,
       "ServiceName": "bike-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
@@ -17,7 +17,7 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/user/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
-      "UseServiceDiscovery": true,
+      "UseServiceDiscovery": false,
       "ServiceName": "user-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
@@ -29,7 +29,7 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/ride/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
-      "UseServiceDiscovery": true,
+      "UseServiceDiscovery": false,
       "ServiceName": "rental-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
@@ -41,7 +41,7 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/station/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
-      "UseServiceDiscovery": true,
+      "UseServiceDiscovery": false,
       "ServiceName": "station-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
@@ -51,11 +51,6 @@
   ],
   "GlobalConfiguration": {
     "BaseUrl": "http://localhost:9000",
-    "UseServiceDiscovery": true,
-    "ServiceDiscoveryProvider": {
-      "Host": "consul-agent",
-      "Port": 8500,
-      "Type": "PollConsul"
-    }
+    "UseServiceDiscovery": false
   }
 }
