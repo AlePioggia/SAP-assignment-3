@@ -1,0 +1,14 @@
+<div class="ebike-section">
+    <h2>Create a New eBike</h2>
+    <input [(ngModel)]="createEBikeRequest.name" placeholder="eBike Name" />
+    <input [(ngModel)]="createEBikeRequest.x" placeholder="Position X" type="number" />
+    <input [(ngModel)]="createEBikeRequest.y" placeholder="Position Y" type="number" />
+    <button (click)="createEBike()">Create eBike</button>
+  
+    <h2>eBike List</h2>
+    <ul>
+      <li *ngFor="let ebike of ebikes">
+        {{ ebike.name }} - Position: ({{ ebike.x }}, {{ ebike.y }}) - Available: {{ ebike.isAvailable }}
+      </li>
+    </ul>
+</div>

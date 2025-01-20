@@ -1,12 +1,20 @@
 using Ocelot.Provider.Consul;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using ApiGateway;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-builder.Services.AddOcelot(builder.Configuration).AddConsul<MyConsulServiceBuilder>();
+builder.Services.AddAuthentication()
+   .AddJwtBearer(options =>
+    {
+        options.Authority = "https://localhost:5001";
+        options.Audience = "api_gateway";
+    });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>

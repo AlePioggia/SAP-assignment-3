@@ -1,0 +1,11 @@
+<div class="ride-section">
+    <h2>Start a Ride</h2>
+    <input [(ngModel)]="startRideRequest.userId" placeholder="User ID" />
+    <input [(ngModel)]="startRideRequest.eBikeId" placeholder="eBike ID" />
+    <button (click)="startRide()">Start Ride</button>
+  
+    <h2>End a Ride</h2>
+    <input #rideId placeholder="Ride ID" />
+    <button (click)="endRide(rideId.value)">End Ride</button>
+  </div>
+  

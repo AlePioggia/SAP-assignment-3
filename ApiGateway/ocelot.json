@@ -5,11 +5,21 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/bike/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
       "UseServiceDiscovery": false,
       "ServiceName": "bike-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
         "Type": "RoundRobin"
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
       }
     },
     {
@@ -17,11 +27,21 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/user/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
       "UseServiceDiscovery": false,
       "ServiceName": "user-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
         "Type": "RoundRobin"
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
       }
     },
     {
@@ -29,11 +49,21 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/ride/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5002
+        }
+      ],
       "UseServiceDiscovery": false,
       "ServiceName": "rental-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
         "Type": "RoundRobin"
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
       }
     },
     {
@@ -41,11 +71,21 @@
       "DownstreamScheme": "http",
       "UpstreamPathTemplate": "/api/station/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST" ],
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5003
+        }
+      ],
       "UseServiceDiscovery": false,
       "ServiceName": "station-service",
       "RouteIsCaseSensitive": false,
       "LoadBalancerOptions": {
         "Type": "RoundRobin"
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
       }
     }
   ],

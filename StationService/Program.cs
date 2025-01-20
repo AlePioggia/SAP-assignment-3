@@ -1,4 +1,5 @@
 using Consul;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using MongoDB.Driver;
 using StationService.application;
 using StationService.infrastructure;
@@ -21,6 +22,17 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
 });
 
 builder.Services.AddControllers();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://your-identity-server";
+        options.RequireHttpsMetadata = false;
+        options.Audience = "YourApiAudience";
+    });
+
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 app.MapControllers();

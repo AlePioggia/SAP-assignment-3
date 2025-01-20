@@ -1,0 +1,20 @@
+<div class="bike-grid-container">
+    <h2>Bike Positions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Bike ID</th>
+          <th>X Coordinate</th>
+          <th>Y Coordinate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let bike of signalRService.bikePositionUpdates">
+          <td>{{ bike.bikeId }}</td>
+          <td>{{ bike.x }}</td>
+          <td>{{ bike.y }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  

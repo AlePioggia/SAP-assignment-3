@@ -1,4 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using UserService.application;
 
 namespace UserService.controller
@@ -45,9 +49,30 @@ namespace UserService.controller
                 return Unauthorized();
             }
 
-            await _redisSessionService.StoreSessionAsync(userId, authenticationDto.UserName);
+            var token = GenerateJwtToken(authenticationDto);
 
-            return Ok(new { UserId = userId });
+            return Ok(new { Token = token });
+        }
+
+        private string GenerateJwtToken(UserAuthenticationDto user) {
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("SecretKey"));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: "Issuer",
+                audience: "Audience",
+                claims: claims,
+                expires: DateTime.Now.AddHours(1),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         [HttpGet("{id}")]

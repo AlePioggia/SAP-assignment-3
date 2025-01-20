@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert --file ../docker-compose.yaml --replicas=3
+    kompose.version: 1.35.0 (9532ceef3)
+  labels:
+    io.kompose.service: smart-city-service
+  name: smart-city-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      io.kompose.service: smart-city-service
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert --file ../docker-compose.yaml --replicas=3
+        kompose.version: 1.35.0 (9532ceef3)
+      labels:
+        io.kompose.service: smart-city-service
+    spec:
+      containers:
+        - args:
+            - ./wait-for-it.sh
+            - consul-agent:8500
+            - --
+            - ./wait-for-it.sh
+            - rabbitmq:5672
+            - --
+            - dotnet
+            - SmartCityService.dll
+          env:
+            - name: CONSUL_HTTP_ADDR
+              value: http://consul-agent:8500
+            - name: MONGODB_CONNECTION
+              value: mongodb://root:rootpassword@mongodb:27017
+            - name: RABBITMQ_CONNECTION
+              value: amqp://guest:guest@rabbitmq:5672
+          image: smart-city-service
+          name: smart-city-service
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: "536870912"
+            requests:
+              cpu: 250m
+              memory: "268435456"
+      restartPolicy: Always

@@ -3,6 +3,7 @@ using BikeService.controller;
 using BikeService.infrastructure;
 using Consul;
 using EventStore.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,19 @@ builder.Services.AddSingleton(sp =>
     var settings = EventStoreClientSettings.Create("esdb://eventstore:2113?tls=false");
     return new EventStoreClient(settings);
 });
+
+builder.Services.AddControllers();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://your-identity-server";
+        options.RequireHttpsMetadata = false;
+        options.Audience = "YourApiAudience";
+    });
+
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 

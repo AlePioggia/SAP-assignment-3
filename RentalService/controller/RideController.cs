@@ -1,6 +1,7 @@
 ﻿using RentalService.application.ride;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BikeManagementService.controller
 {
@@ -15,6 +16,7 @@ namespace BikeManagementService.controller
             _rideService = rideService;
         }
 
+        [Authorize]
         [HttpPost("start")]
         public async Task<IActionResult> StartRide([FromBody] RideStartRequest request)
         {
@@ -33,6 +35,7 @@ namespace BikeManagementService.controller
             return Ok(rideId);
         }
 
+        [Authorize]
         [HttpPost("end/{rideId}")]
         public async Task<IActionResult> EndRide(string rideId)
         {
@@ -48,6 +51,7 @@ namespace BikeManagementService.controller
             return Ok(new { Message = "Ride ended successfully", RideId = rideId });
         }
 
+        [Authorize]
         [HttpGet("{rideId}")]
         public async Task<IActionResult> GetRideById(string rideId)
         {

@@ -1,0 +1,15 @@
+<!-- src/app/components/user/user.component.html -->
+<div class="user-section">
+    <h2>User Registration</h2>
+    <input [(ngModel)]="registrationRequest.username" placeholder="Username" />
+    <input [(ngModel)]="registrationRequest.password" placeholder="Password" type="password" />
+    <button (click)="registerUser()">Register</button>
+    <p>{{ registrationResponse }}</p>
+  
+    <h2>User Authentication</h2>
+    <input [(ngModel)]="authenticationRequest.username" placeholder="Username" />
+    <input [(ngModel)]="authenticationRequest.password" placeholder="Password" type="password" />
+    <button (click)="authenticateUser()">Authenticate</button>
+    <p>{{ authenticationResponse }}</p>
+  </div>
+  

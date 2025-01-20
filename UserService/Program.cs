@@ -1,4 +1,5 @@
 using Consul;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using UserService.application;
@@ -33,10 +34,22 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(sp =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://your-identity-server";
+        options.RequireHttpsMetadata = false;
+        options.Audience = "YourApiAudience";
+    });
+
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
 builder.Services.AddHealthChecks()
     .AddCheck<CustomHealthCheck>("Custom health check", tags: new[] { "critical" }); ;
 
 var app = builder.Build();
+
 
 app.UseCors(options =>
 {

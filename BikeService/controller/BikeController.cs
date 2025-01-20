@@ -1,4 +1,5 @@
 ﻿using BikeService.application;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeService.controller
@@ -14,6 +15,7 @@ namespace BikeService.controller
             _bikeService = bikeService;
         }
 
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateBike([FromBody] CreateBikeRequest request)
         {
@@ -21,6 +23,7 @@ namespace BikeService.controller
             return Ok("Bike created!");
         }
 
+        [Authorize]
         [HttpPost("update-position")]
         public async Task<IActionResult> UpdatePosition(string bikeId, int X, int Y)
         {
